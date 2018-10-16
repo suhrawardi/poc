@@ -1,0 +1,4 @@
+.stack-work/
+poc.cabal
+*~
+/dist
