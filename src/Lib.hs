@@ -1,6 +1,10 @@
-module Lib
-    ( someFunc
-    ) where
+module Lib (
+    playMusic
+  ) where
 
-someFunc :: IO ()
-someFunc = putStrLn "someFunc"
+import Euterpea
+
+playMusic :: IO ()
+playMusic = do
+  let channel = 7
+  playDev channel $ c 4 wn
