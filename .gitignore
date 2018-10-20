@@ -2,3 +2,4 @@
 poc.cabal
 *~
 /dist
+/poc-exe
