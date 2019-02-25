@@ -26,18 +26,21 @@ popToNote :: Double -> [MidiMessage]
 popToNote x = [ANote 0 n 64 0.05]
               where n = truncate (x * 127)
 
+
 threeUI :: UISF () ()
 threeUI = proc _ -> do
   (mi, mo) <- getDeviceIDs -< ()
   m <- midiIn -< mi
-
-  _ <- title "Midi in" display -< fmap (mapMaybe toM) m
 
   f <- title "Frequency" $ withDisplay (hSlider (0.1, 10) 0.1) -< ()
   tick <- timer -< 1/f
 
   r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
   pop <- accum 0.1 -< fmap (const (grow r)) tick
+
+  rec m2 <- arr id -< m'
+      let m' = fromMaybe m2 m
+  _ <- title "Midi in" display -< m2
 
   midiOut -< (mo, fmap(const (popToNote pop)) tick)
 
