@@ -5,26 +5,20 @@ module Three (
   ) where
 
 import Data.Maybe --(catMaybes, mapMaybe)
+import Text.Read (readMaybe)
 import Euterpea
 import Helpers
 import HSoM
 import FRP.UISF
 
 
-applyJust :: [Maybe (a -> a)] -> a -> a
-applyJust = foldr (.) id . catMaybes
+asNote :: Pitch -> [MidiMessage]
+asNote x = [ANote 0 n 64 0.05]
+            where n = absPitch x
 
-toM :: MidiMessage -> Maybe MidiMessage
-toM (ANote c k v d)      = Just (ANote c k v d)
-toM (Std (NoteOn c k v)) = Just (ANote c k v 0.1)
-toM _                    = Nothing
+ps :: [Pitch]
+ps = [(C,4), (D,4), (E,4)]
 
-grow :: Double -> Double -> Double
-grow r x = r * x * (1 - x)
-
-popToNote :: Double -> [MidiMessage]
-popToNote x = [ANote 0 n 64 0.05]
-              where n = truncate (x * 127)
 
 
 threeUI :: UISF () ()
@@ -35,13 +29,8 @@ threeUI = proc _ -> do
   f <- title "Frequency" $ withDisplay (hSlider (0.1, 10) 0.1) -< ()
   tick <- timer -< 1/f
 
-  r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
-  pop <- accum 0.1 -< fmap (const (grow r)) tick
+  _ <- title "Midi in" display -< m
 
-  rec m2 <- arr id -< m'
-      let m' = fromMaybe m2 m
-  _ <- title "Midi in" display -< m2
-
-  midiOut -< (mo, fmap(const (popToNote pop)) tick)
+  midiOut -< (mo, fmap(const (asNote (C,4))) tick)
 
 runThree = runMUI (styling "Blah!" (300, 600)) threeUI
