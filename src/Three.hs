@@ -29,7 +29,8 @@ threeUI = proc _ -> do
   f <- title "Frequency" $ withDisplay (hSlider (0.1, 10) 0.1) -< ()
   tick <- timer -< 1/f
 
-  _ <- title "Midi in" display -< m
+  m2 <- hold [ANote 0 1 64 0.05] -< m
+  _ <- title "Midi in" display -< m2
 
   midiOut -< (mo, fmap(const (asNote (C,4))) tick)
 
