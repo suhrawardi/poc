@@ -20,10 +20,11 @@ extra-source-files:
 description:         Please see the README on GitHub at <https://github.com/suhrawardi/poc#readme>
 
 dependencies:
+- alsa-seq
 - base >= 4.7 && < 5
 - Euterpea > 2.0.0 && < 2.1.0
-- alsa-seq
 - HSoM
+- random
 - UISF
 
 library:
