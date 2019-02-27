@@ -35,12 +35,12 @@ threeUI = proc _ -> do
   (mi, mo) <- getDeviceIDs -< ()
   m <- midiIn -< mi
 
-  -- rf <- liftAIO randomRIO -< (0.1, 1.0)
+  rf <- liftAIO randomRIO -< (1.0, 2.0)
   min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
   max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
 
   rate <- title "Frequency" $ withDisplay (hSlider (0.1, 10) 0.1) -< ()
-  tick <- timer -< 1/rate
+  tick <- timer -< 1/(rate * rf)
 
   m2 <- hold [ANote 0 1 64 0.05] -< m
   _ <- title "Midi in" display -< m2
