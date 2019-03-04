@@ -4,6 +4,7 @@ module Three (
     runThree
   ) where
 
+import Buttons
 import Data.Maybe (isJust)
 import Euterpea
 import Helpers
@@ -11,22 +12,6 @@ import HSoM
 import FRP.UISF
 import System.Random
 import System.Random.Distributions
-
-
-buttonsPanel = topDown $ proc _ -> do
-    start <- edge <<< button "Start" -< ()
-    stop <- edge <<< button "Stop" -< ()
-    returnA -< (start, stop)
-
-
-handleButtons :: UISF (SEvent a, SEvent b) Bool
-handleButtons = proc (start, stop) -> do
-    rec isPlaying <- delay False -< isPlaying'
-        let isPlaying' = case (start, stop) of
-                             (Just _, _) -> True
-                             (_, Just _) -> False
-                             _ -> isPlaying
-    returnA -< isPlaying
 
 
 throttle = proc (channel, freq, tick, isPlaying) -> do
@@ -50,24 +35,8 @@ randomFreq = proc _ -> do
     returnA -< 1 / frq / rate
 
 
-asNote2 :: Int -> Pitch -> [MidiMessage]
-asNote2 channel freq = [ANote 0 n 64 0.05]
-            where n = absPitch freq
-
-
 sGen :: StdGen
 sGen = mkStdGen 42
-
-
-asMidiMessage :: Int -> Int -> [MidiMessage]
-asMidiMessage channel freq = [ANote channel freq 64 0.05]
-
-
-randFreq :: Double
-randFreq = head $ randomRs (1,10) sGen
-
-
-
 
 
 threeUI :: UISF () ()
