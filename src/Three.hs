@@ -37,6 +37,12 @@ throttle = proc (channel, freq, tick, isPlaying) -> do
     returnA -< messages
 
 
+randomBound = proc _ -> do
+    min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
+    max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
+    returnA -< (min, max)
+
+
 
 asNote2 :: Int -> Pitch -> [MidiMessage]
 asNote2 channel freq = [ANote 0 n 64 0.05]
@@ -72,20 +78,18 @@ threeUI = proc _ -> do
   isPlaying <- handleButtons -< (start, stop)
 
 
-  min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
-  max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
+  (min, max) <- randomBound -< ()
+  r1 <- liftAIO randomRIO -< (min, max)
 
   minRand <- title "Min rand frq" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
   maxRand <- title "Max rand frq" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
   rf <- liftAIO randomRIO -< (minRand, maxRand)
+
   rate <- title "Frequency" $ withDisplay (hSlider (0.01, 10) 0.1) -< ()
   tick <- timer -< (1 / rate) / rf
 
+
   r1 <- liftAIO randomRIO -< (min, max)
-  r2 <- liftAIO randomRIO -< (min, max)
-
-  _ <- title "RF" display -< rf
-
 
   outMsg <- throttle -< (0, r1, tick, isPlaying)
 
