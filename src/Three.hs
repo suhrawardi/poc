@@ -14,6 +14,10 @@ import System.Random
 import System.Random.Distributions
 
 
+sGen :: StdGen
+sGen = mkStdGen 42
+
+
 throttle = proc (channel, freq, tick, isPlaying) -> do
     rec messages <- delay Nothing -< messages'
         let messages' = if isJust tick && isPlaying
@@ -22,7 +26,7 @@ throttle = proc (channel, freq, tick, isPlaying) -> do
     returnA -< messages
 
 
-randomPitchBound = proc _ -> do
+randomPitchBound = proc (a, b) -> do
     min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
     max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
     returnA -< (min, max)
@@ -30,13 +34,11 @@ randomPitchBound = proc _ -> do
 
 randomFreq = proc _ -> do
     max <- title "Max Rate" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
-    frq <- title "Frequency" $ withDisplay (hSlider (0.01, 10.0) 0.1) -< ()
-    rate <- liftAIO randomRIO -< (0.1, max)
-    returnA -< 1 / frq / rate
-
-
-sGen :: StdGen
-sGen = mkStdGen 42
+    fr <- title "Frequency" $ withDisplay (hSlider (0.01, 10.0) 0.1) -< ()
+    rnd <- liftAIO randomRIO -< (0.1, max)
+    rec frq <- delay 1.0 -< frq'
+        let frq' = rnd / fr * 10
+    returnA -< frq
 
 
 threeUI :: UISF () ()
@@ -52,11 +54,14 @@ threeUI = proc _ -> do
   (start, stop) <- buttonsPanel -< ()
   isPlaying <- handleButtons -< (start, stop)
 
-  (minP, maxP) <- randomPitchBound -< ()
+  (minP, maxP) <- randomPitchBound -< (30, 70)
   r1 <- liftAIO randomRIO -< (minP, maxP)
 
+
   frq <- randomFreq -< ()
-  tick <- timer -< frq
+  _ <- title "Freak" display -< frq
+  tick <- timer -< 1 / frq
+  _ <- title "Tick" display -< tick
 
 
   outMsg <- throttle -< (0, r1, tick, isPlaying)
