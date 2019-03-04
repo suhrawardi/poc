@@ -37,11 +37,17 @@ throttle = proc (channel, freq, tick, isPlaying) -> do
     returnA -< messages
 
 
-randomBound = proc _ -> do
+randomPitchBound = proc _ -> do
     min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
     max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
     returnA -< (min, max)
 
+
+randomFreq = proc _ -> do
+    max <- title "Max Rate" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
+    frq <- title "Frequency" $ withDisplay (hSlider (0.01, 10.0) 0.1) -< ()
+    rate <- liftAIO randomRIO -< (0.1, max)
+    returnA -< 1 / frq / rate
 
 
 asNote2 :: Int -> Pitch -> [MidiMessage]
@@ -77,23 +83,16 @@ threeUI = proc _ -> do
   (start, stop) <- buttonsPanel -< ()
   isPlaying <- handleButtons -< (start, stop)
 
+  (minP, maxP) <- randomPitchBound -< ()
+  r1 <- liftAIO randomRIO -< (minP, maxP)
 
-  (min, max) <- randomBound -< ()
-  r1 <- liftAIO randomRIO -< (min, max)
+  frq <- randomFreq -< ()
+  tick <- timer -< frq
 
-  minRand <- title "Min rand frq" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
-  maxRand <- title "Max rand frq" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
-  rf <- liftAIO randomRIO -< (minRand, maxRand)
-
-  rate <- title "Frequency" $ withDisplay (hSlider (0.01, 10) 0.1) -< ()
-  tick <- timer -< (1 / rate) / rf
-
-
-  r1 <- liftAIO randomRIO -< (min, max)
 
   outMsg <- throttle -< (0, r1, tick, isPlaying)
 
 
   midiOut -< (mo, outMsg)
 
-runThree = runMUI (styling "Blah!" (500, 800)) threeUI
+runThree = runMUI (styling "Blah!" (800, 1200)) threeUI
