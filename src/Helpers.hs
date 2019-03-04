@@ -16,4 +16,5 @@ getDeviceIDs = topDown $
     mo <- selectOutput -< ()
     outA -< (mi, mo)
 
+
 styling title (h, w) = defaultMUIParams {uiTitle = title, uiSize = (h, w)}
