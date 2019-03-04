@@ -29,22 +29,33 @@ handleButtons = proc (start, stop) -> do
     returnA -< isPlaying
 
 
+throttle = proc (channel, freq, tick, isPlaying) -> do
+    rec messages <- delay Nothing -< messages'
+        let messages' = if isJust tick && isPlaying
+                            then Just (asMidiMessage channel freq)
+                            else Nothing
+    returnA -< messages
 
-asNote2 :: Pitch -> [MidiMessage]
-asNote2 x = [ANote 0 n 64 0.05]
-            where n = absPitch x
+
+
+asNote2 :: Int -> Pitch -> [MidiMessage]
+asNote2 channel freq = [ANote 0 n 64 0.05]
+            where n = absPitch freq
 
 
 sGen :: StdGen
 sGen = mkStdGen 42
 
 
-asMidiMessage :: Int -> [MidiMessage]
-asMidiMessage p = [ANote 0 p 64 0.05]
+asMidiMessage :: Int -> Int -> [MidiMessage]
+asMidiMessage channel freq = [ANote channel freq 64 0.05]
 
 
 randFreq :: Double
 randFreq = head $ randomRs (1,10) sGen
+
+
+
 
 
 threeUI :: UISF () ()
@@ -75,9 +86,10 @@ threeUI = proc _ -> do
 
   _ <- title "RF" display -< rf
 
-  let outMsgs = if isJust tick && isPlaying then Just (asMidiMessage r1) else Nothing
+
+  outMsg <- throttle -< (0, r1, tick, isPlaying)
 
 
-  midiOut -< (mo, outMsgs)
+  midiOut -< (mo, outMsg)
 
 runThree = runMUI (styling "Blah!" (500, 800)) threeUI
