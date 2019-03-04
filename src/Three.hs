@@ -29,6 +29,7 @@ handleButtons = proc (start, stop) -> do
     returnA -< isPlaying
 
 
+
 asNote2 :: Pitch -> [MidiMessage]
 asNote2 x = [ANote 0 n 64 0.05]
             where n = absPitch x
@@ -51,8 +52,14 @@ threeUI = proc _ -> do
   (mi, mo) <- getDeviceIDs -< ()
   m <- midiIn -< mi
 
+  -- Display incoming Midi
+  m2 <- hold [ANote 0 1 64 0.05] -< m
+  _ <- title "Midi in" display -< m2
+
+  -- Set whether it's playing
   (start, stop) <- buttonsPanel -< ()
   isPlaying <- handleButtons -< (start, stop)
+
 
   min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
   max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
@@ -63,15 +70,13 @@ threeUI = proc _ -> do
   rate <- title "Frequency" $ withDisplay (hSlider (0.01, 10) 0.1) -< ()
   tick <- timer -< (1 / rate) / rf
 
-  m2 <- hold [ANote 0 1 64 0.05] -< m
-  _ <- title "Midi in" display -< m2
-
   r1 <- liftAIO randomRIO -< (min, max)
   r2 <- liftAIO randomRIO -< (min, max)
 
   _ <- title "RF" display -< rf
 
-  let outMsgs = if isJust tick then Just (asMidiMessage r1) else Nothing
+  let outMsgs = if isJust tick && isPlaying then Just (asMidiMessage r1) else Nothing
+
 
   midiOut -< (mo, outMsgs)
 
