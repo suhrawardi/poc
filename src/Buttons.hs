@@ -9,7 +9,7 @@ import Data.Maybe (isJust)
 import FRP.UISF
 
 
-buttonsPanel = topDown $ proc _ -> do
+buttonsPanel = title "Start/Stop" $ topDown $ proc _ -> do
     start <- edge <<< button "Start" -< ()
     stop <- edge <<< button "Stop" -< ()
     returnA -< (start, stop)
