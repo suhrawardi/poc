@@ -42,17 +42,23 @@ throttle = proc (channel, freq, tick, isPlaying) -> do
     returnA -< messages
 
 
-randomPitchBound = title "Pitch" $ topDown $ proc (a, b) -> do
+randomPitchBound = title "Pitch" $ topDown $ proc _ -> do
     min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
     max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
     returnA -< (min, max)
 
 
-channelPanel = title "Channel" $ leftRight $ proc (a, b) -> do
-    (minP, maxP) <- randomPitchBound -< (a, b)
+channelPanel = title "Channel" $ leftRight $ proc _ -> do
+    (minP, maxP) <- randomPitchBound -< ()
     pitch <- liftAIO randomRIO -< (minP, maxP)
     isPlaying <- buttonsPanel >>> handleButtons -< ()
     returnA -< (pitch, isPlaying)
+
+
+displayMidiMessage = topDown $ proc s -> do
+    m2 <- hold [ANote 0 1 64 0.05] -< s
+    _ <- title "Midi in" display -< m2
+    returnA -< s
 
 
 delayPanel = title "Delay" $ leftRight $ proc m -> do
@@ -61,8 +67,6 @@ delayPanel = title "Delay" $ leftRight $ proc m -> do
     f <- title "Echo frequency" $ withDisplay (hSlider (0, 10) 0) -< ()
     rec s <- vdelay -< (1/f, fmap (mapMaybe (decay 0.1 r)) m')
         let m' = mappend m s
-    m2 <- hold [ANote 0 1 64 0.05] -< s
-    _ <- title "Midi in" display -< m2
     returnA -< s
 
 
@@ -72,8 +76,9 @@ threeUI = proc _ -> do
   m <- midiIn -< mi
 
   m2 <- delayPanel -< m
+  _ <- displayMidiMessage -< m2
 
-  (r1, isPlaying) <- channelPanel -< (30, 70)
+  (r1, isPlaying) <- channelPanel -< ()
 
   f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
   tick <- timer -< 1 / f
