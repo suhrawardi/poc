@@ -32,15 +32,6 @@ randomPitchBound = title "Pitch" $ topDown $ proc (a, b) -> do
     returnA -< (min, max)
 
 
-randomFreq = title "Rate" $ leftRight $ proc _ -> do
-    max <- title "Max Rate" $ withDisplay (hSlider (0.01, 10.0) 1.0) -< ()
-    fr <- title "Frequency" $ withDisplay (hSlider (0.01, 10.0) 0.1) -< ()
-    rnd <- liftAIO randomRIO -< (0.1, max)
-    rec frq <- delay 1.0 -< frq'
-        let frq' = rnd / fr * 10
-    returnA -< frq
-
-
 channelPanel = title "Channel" $ leftRight $ proc (a, b) -> do
     (minP, maxP) <- randomPitchBound -< (a, b)
     pitch <- liftAIO randomRIO -< (minP, maxP)
@@ -59,10 +50,8 @@ threeUI = proc _ -> do
 
   (r1, isPlaying) <- channelPanel -< (30, 70)
 
-
-  frq <- randomFreq -< ()
-  _ <- title "Freak" display -< frq
-  tick <- timer -< 1 / frq
+  f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
+  tick <- timer -< 1 / f
   _ <- title "Tick" display -< tick
 
 
