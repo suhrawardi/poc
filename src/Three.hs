@@ -79,6 +79,7 @@ threeUI = proc _ -> do
   _ <- displayMidiMessage -< m2
 
   (r1, isPlaying) <- channelPanel -< ()
+  i <- leftRight $ title "WIP" $ checkGroup [("a", 60), ("b", 64)] -< ()
 
   f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
   tick <- timer -< 1 / f
