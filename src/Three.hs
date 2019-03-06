@@ -69,24 +69,36 @@ delayPanel = title "Delay" $ leftRight $ proc m -> do
         let m' = mappend m s
     returnA -< s
 
+instrumentPanel = topDown $ proc _ -> do
+    (r1, isPlaying) <- channelPanel -< ()
+    i <- leftRight $ title "WIP" $ checkGroup [("a", 60), ("b", 64)] -< ()
+
+    f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
+    tick <- timer -< 1 / f
+    _ <- title "Tick" display -< tick
+
+    outMsg <- throttle -< (0, r1, tick, isPlaying)
+    returnA -< outMsg
+
+midiPanel = topDown $ proc _ -> do
+    (mi, mo) <- getDeviceIDs -< ()
+    m <- midiIn -< mi
+
+    m2 <- delayPanel -< m
+    _ <- displayMidiMessage -< m2
+    returnA -< mo
+
+
 
 threeUI :: UISF () ()
-threeUI = proc _ -> do
-  (mi, mo) <- getDeviceIDs -< ()
-  m <- midiIn -< mi
+threeUI = leftRight $ proc _ -> do
 
-  m2 <- delayPanel -< m
-  _ <- displayMidiMessage -< m2
+  mo <- midiPanel -< ()
 
-  (r1, isPlaying) <- channelPanel -< ()
-  i <- leftRight $ title "WIP" $ checkGroup [("a", 60), ("b", 64)] -< ()
+  out1 <- instrumentPanel -< ()
+  midiOut -< (mo, out1)
 
-  f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
-  tick <- timer -< 1 / f
-  _ <- title "Tick" display -< tick
+  out2 <- instrumentPanel -< ()
+  midiOut -< (mo, out2)
 
-  outMsg <- throttle -< (0, r1, tick, isPlaying)
-
-  midiOut -< (mo, outMsg)
-
-runThree = runMUI (styling "Blah!" (800, 1200)) threeUI
+runThree = runMUI (styling "Composer!" (1200, 400)) threeUI
