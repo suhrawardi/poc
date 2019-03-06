@@ -81,7 +81,11 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
 
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
-    returnA -< mo
+
+    f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
+    tick <- timer -< 1 / f
+
+    returnA -< (mo, tick)
 
 
 notes = [("C", C), ("Cs", Cs),
@@ -107,7 +111,7 @@ instrumentPanel = topDown $ setSize (400, 800) $ proc channel -> do
 threeUI :: UISF () ()
 threeUI = leftRight $ proc _ -> do
 
-  mo <- midiPanel -< ()
+  (mo, masterTick) <- midiPanel -< ()
 
   out1 <- instrumentPanel -< 0
   midiOut -< (mo, out1)
