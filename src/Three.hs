@@ -48,10 +48,15 @@ randomPitchBound = title "Pitch" $ topDown $ proc _ -> do
     returnA -< (min, max)
 
 
-channelPanel = title "Channel" $ leftRight $ proc _ -> do
+channelPanel = title "Channel" $ topDown $ proc _ -> do
+    isPlaying <- buttonsPanel >>> handleButtons -< ()
+
+    notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
+    _ <- title "Selection" display -< notes
+
     (minP, maxP) <- randomPitchBound -< ()
     pitch <- liftAIO randomRIO -< (minP, maxP)
-    isPlaying <- buttonsPanel >>> handleButtons -< ()
+
     returnA -< (pitch, isPlaying)
 
 
@@ -69,18 +74,8 @@ delayPanel = title "Delay" $ leftRight $ proc m -> do
         let m' = mappend m s
     returnA -< s
 
-instrumentPanel = topDown $ proc _ -> do
-    (r1, isPlaying) <- channelPanel -< ()
-    i <- leftRight $ title "WIP" $ checkGroup [("a", 60), ("b", 64)] -< ()
 
-    f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
-    tick <- timer -< 1 / f
-    _ <- title "Tick" display -< tick
-
-    outMsg <- throttle -< (0, r1, tick, isPlaying)
-    returnA -< outMsg
-
-midiPanel = topDown $ proc _ -> do
+midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     (mi, mo) <- getDeviceIDs -< ()
     m <- midiIn -< mi
 
@@ -89,16 +84,35 @@ midiPanel = topDown $ proc _ -> do
     returnA -< mo
 
 
+notes = [("C", C), ("Cs", Cs),
+         ("D", D), ("Ds", Ds),
+         ("E", E),
+         ("F", F), ("Fs", Fs),
+         ("G", G), ("Gs", Gs),
+         ("A", A), ("As", As),
+         ("B", B), ("Bs", Bs)]
+
+
+instrumentPanel = topDown $ setSize (400, 800) $ proc channel -> do
+    (r1, isPlaying) <- channelPanel -< ()
+
+    f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
+    tick <- timer -< 1 / f
+    _ <- title "Tick" display -< tick
+
+    outMsg <- throttle -< (channel, r1, tick, isPlaying)
+    returnA -< outMsg
+
 
 threeUI :: UISF () ()
 threeUI = leftRight $ proc _ -> do
 
   mo <- midiPanel -< ()
 
-  out1 <- instrumentPanel -< ()
+  out1 <- instrumentPanel -< 0
   midiOut -< (mo, out1)
 
-  out2 <- instrumentPanel -< ()
+  out2 <- instrumentPanel -< 1
   midiOut -< (mo, out2)
 
-runThree = runMUI (styling "Composer!" (1200, 400)) threeUI
+runThree = runMUI (styling "Composer!" (2400, 800)) threeUI
