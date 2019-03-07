@@ -97,6 +97,18 @@ notes = [("C", C), ("Cs", Cs),
          ("B", B), ("Bs", Bs)]
 
 
+atRandIndex :: [a] -> IO a
+atRandIndex l = do
+    i <- randomRIO (0, length l - 1)
+    return $ l !! i
+
+
+randNote :: IO Int
+randNote = do
+    note <- atRandIndex notes
+    return $ pcToInt $ snd note
+
+
 instrumentPanel = topDown $ setSize (400, 800) $ proc channel -> do
     (r1, isPlaying) <- channelPanel -< ()
 
