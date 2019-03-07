@@ -52,12 +52,10 @@ channelPanel = title "Channel" $ topDown $ proc _ -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
-    _ <- title "Selection" display -< notes
+    note <- randNote -< notes
+    _ <- title "Selection" display -< note
 
-    (minP, maxP) <- randomPitchBound -< ()
-    pitch <- liftAIO randomRIO -< (minP, maxP)
-
-    returnA -< (pitch, isPlaying)
+    returnA -< (note, isPlaying)
 
 
 displayMidiMessage = topDown $ proc s -> do
@@ -97,16 +95,9 @@ notes = [("C", C), ("Cs", Cs),
          ("B", B), ("Bs", Bs)]
 
 
-atRandIndex :: [a] -> IO a
-atRandIndex l = do
-    i <- randomRIO (0, length l - 1)
-    return $ l !! i
-
-
-randNote :: IO Int
-randNote = do
-    note <- atRandIndex notes
-    return $ pcToInt $ snd note
+randNote = proc notes -> do
+    i <- liftAIO randomRIO -< (0, length notes - 1)
+    returnA -< pcToInt $ notes !! i
 
 
 instrumentPanel = topDown $ setSize (400, 800) $ proc channel -> do
