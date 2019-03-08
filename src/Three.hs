@@ -33,9 +33,8 @@ channelPanel = title "Channel" $ topDown $ proc _ -> do
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
     note <- hold 0 <<< randNote -< notes
-    _ <- title "Selection" display -< note
 
-    returnA -< (note, isPlaying)
+    returnA -< (note, isPlaying, notes)
 
 
 displayMidiMessage = topDown $ proc s -> do
@@ -74,14 +73,24 @@ randNote = proc notes -> do
     returnA -< note
 
 
+statusPanel = leftRight $ proc (channel, isPlaying, note, notes) -> do
+    _ <- title "On?" display -< isPlaying
+    _ <- title "Channel" display -< channel
+    _ <- title "Playing" display -< note
+    _ <- title "Notes" display -< notes
+    returnA -< ()
+
+
 instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, tick) -> do
-    (r1, isPlaying) <- channelPanel -< ()
+    (note, isPlaying, notes) <- channelPanel -< ()
+
+    _ <- statusPanel -< (channel, isPlaying, note, notes)
 
     f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
-    tick <- timer -< 1 / f
-    _ <- title "Tick" display -< tick
+    tick2 <- timer -< 1 / f
+    _ <- title "Tick" display -< tick2
 
-    outMsg <- throttle -< (channel, r1, tick, isPlaying)
+    outMsg <- throttle -< (channel, note, tick, isPlaying)
     returnA -< outMsg
 
 
