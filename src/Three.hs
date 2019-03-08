@@ -52,7 +52,8 @@ channelPanel = title "Channel" $ topDown $ proc _ -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
-    note <- randNote -< notes
+    noteM <- randNote -< notes
+    note <- hold 0 -< noteM
     _ <- title "Selection" display -< note
 
     returnA -< (note, isPlaying)
@@ -97,7 +98,10 @@ notes = [("C", C), ("Cs", Cs),
 
 randNote = proc notes -> do
     i <- liftAIO randomRIO -< (0, length notes - 1)
-    returnA -< pcToInt $ notes !! i
+    let note = case notes of
+                    [] -> Nothing
+                    _ -> Just $ pcToInt $ notes !! i
+    returnA -< note
 
 
 instrumentPanel = topDown $ setSize (400, 800) $ proc channel -> do
