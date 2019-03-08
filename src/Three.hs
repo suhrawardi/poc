@@ -14,26 +14,6 @@ import System.Random
 import System.Random.Distributions
 
 
-sGen :: StdGen
-sGen = mkStdGen 42
-
-
-decay :: Time -> Double -> MidiMessage -> Maybe MidiMessage
-decay dur r m =
-  let f c k v d = if v > 0
-                  then let v' = truncate(fromIntegral v * r)
-                       in Just (ANote c k v' d)
-                  else Nothing
-  in case m of
-    ANote c k v d      -> f c k v d
-    Std (NoteOn c k v) -> f c k v dur
-    _                  -> Nothing
-
-
-grow :: Double -> Double -> Double
-grow r x = r * x * (1 - x)
-
-
 throttle = proc (channel, freq, tick, isPlaying) -> do
     rec messages <- delay Nothing -< messages'
         let messages' = if isJust tick && isPlaying
@@ -85,15 +65,6 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     tick <- timer -< 1 / f
 
     returnA -< (mo, tick)
-
-
-notes = [("C", C), ("Cs", Cs),
-         ("D", D), ("Ds", Ds),
-         ("E", E),
-         ("F", F), ("Fs", Fs),
-         ("G", G), ("Gs", Gs),
-         ("A", A), ("As", As),
-         ("B", B), ("Bs", Bs)]
 
 
 randNote = proc notes -> do
