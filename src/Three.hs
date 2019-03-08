@@ -32,8 +32,7 @@ channelPanel = title "Channel" $ topDown $ proc _ -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
-    noteM <- randNote -< notes
-    note <- hold 0 -< noteM
+    note <- hold 0 <<< randNote -< notes
     _ <- title "Selection" display -< note
 
     returnA -< (note, isPlaying)
@@ -75,7 +74,7 @@ randNote = proc notes -> do
     returnA -< note
 
 
-instrumentPanel = topDown $ setSize (400, 800) $ proc channel -> do
+instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, tick) -> do
     (r1, isPlaying) <- channelPanel -< ()
 
     f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
@@ -91,16 +90,16 @@ threeUI = leftRight $ proc _ -> do
 
   (mo, masterTick) <- midiPanel -< ()
 
-  out1 <- instrumentPanel -< 0
+  out1 <- instrumentPanel -< (0, masterTick)
   midiOut -< (mo, out1)
 
-  out2 <- instrumentPanel -< 1
+  out2 <- instrumentPanel -< (1, masterTick)
   midiOut -< (mo, out2)
 
-  out3 <- instrumentPanel -< 2
+  out3 <- instrumentPanel -< (2, masterTick)
   midiOut -< (mo, out3)
 
-  out4 <- instrumentPanel -< 3
+  out4 <- instrumentPanel -< (3, masterTick)
   midiOut -< (mo, out4)
 
 runThree = runMUI (styling "Composer!" (2000, 800)) threeUI
