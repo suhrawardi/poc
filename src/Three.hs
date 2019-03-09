@@ -14,6 +14,23 @@ import System.Random
 import System.Random.Distributions
 
 
+randNote = proc notes -> do
+    i <- liftAIO randomRIO -< (0, length notes - 1)
+    let note = case notes of
+                    [] -> Nothing
+                    _ -> Just $ pcToInt $ notes !! i
+    returnA -< note
+
+
+filterTick = proc (dt, max) -> do
+    rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt')
+        let dt' = if isJust dt && cnt == max then Just () else Nothing
+            cnt' = if isJust dt
+                   then if cnt == max then 0 else cnt + 1
+                   else cnt
+    returnA -< dt
+
+
 throttle = proc (channel, freq, tick, isPlaying) -> do
     rec messages <- delay Nothing -< messages'
         let messages' = if isJust tick && isPlaying
@@ -68,14 +85,6 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     returnA -< (mo, tick)
 
 
-randNote = proc notes -> do
-    i <- liftAIO randomRIO -< (0, length notes - 1)
-    let note = case notes of
-                    [] -> Nothing
-                    _ -> Just $ pcToInt $ notes !! i
-    returnA -< note
-
-
 statusPanel = leftRight $ proc (channel, isPlaying, note, notes) -> do
     _ <- title "On?" display -< isPlaying
     _ <- title "Channel" display -< channel
@@ -91,15 +100,6 @@ instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, ticker) -> do
 
     outMsg <- throttle -< (channel, note, tick, isPlaying)
     returnA -< outMsg
-
-
-filterTick = proc (dt, max) -> do
-    rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt')
-        let dt' = if isJust dt && cnt == max then Just () else Nothing
-            cnt' = if isJust dt
-                   then if cnt == max then 0 else cnt + 1
-                   else cnt
-    returnA -< dt
 
 
 threeUI :: UISF () ()
