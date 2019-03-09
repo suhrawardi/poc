@@ -59,8 +59,8 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
 
-    f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
-    tick <- timer -< 1 / f
+    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 180) 1) -< ()
+    tick <- timer -< 60 / fromIntegral f
 
     returnA -< (mo, tick)
 
@@ -86,18 +86,20 @@ instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, tick) -> do
 
     _ <- statusPanel -< (channel, isPlaying, note, notes)
 
-    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 10) 1) -< ()
+    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
     dt <- filterTick -< (tick, i)
-    _ <- title "Tick?" display -< dt
 
-    outMsg <- throttle -< (channel, note, tick, isPlaying)
+    outMsg <- throttle -< (channel, note, dt, isPlaying)
     returnA -< outMsg
 
 
 filterTick = proc (dt, max) -> do
-    rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt + 1)
-    returnA -< cnt
-
+    rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt')
+        let dt' = if isJust dt && cnt == max then Just () else Nothing
+            cnt' = if isJust dt
+                   then if cnt == max then 0 else cnt + 1
+                   else cnt
+    returnA -< dt
 
 
 threeUI :: UISF () ()
