@@ -67,9 +67,13 @@ delayPanel = title "Delay" $ topDown $ proc m -> do
     r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
     d <- title "Decay rate" $ withDisplay (hSlider (0, 0.9) 0.1) -< ()
     f <- title "Echo frequency" $ withDisplay (hSlider (0, 10) 0) -< ()
-    rec s <- vdelay -< (1/f, fmap (mapMaybe (decay 0.1 r)) m')
+    rec s <- vdelay -< (1/f, fmap (mapMaybe (decay d r)) m')
         let m' = mappend m s
     returnA -< s
+
+
+maybeTick = proc m ->
+    returnA -< fmap (mapMaybe asTick) m
 
 
 midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
@@ -81,6 +85,8 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
 
     f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 180) 1) -< ()
     tick <- timer -< 60 / fromIntegral f
+
+    tick2 <- maybeTick -< m
 
     returnA -< (mo, tick)
 

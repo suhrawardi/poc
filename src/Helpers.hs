@@ -2,6 +2,7 @@
 
 module Helpers (
     asMidiMessage,
+    asTick,
     decay,
     getDeviceIDs,
     grow,
@@ -18,6 +19,12 @@ import System.Random
 
 sGen :: StdGen
 sGen = mkStdGen 42
+
+
+asTick :: MidiMessage -> Maybe ()
+asTick ANote{}        = Just ()
+asTick (Std NoteOn{}) = Just ()
+asTick _              = Nothing
 
 
 decay :: Time -> Double -> MidiMessage -> Maybe MidiMessage
