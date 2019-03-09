@@ -86,12 +86,18 @@ instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, tick) -> do
 
     _ <- statusPanel -< (channel, isPlaying, note, notes)
 
-    f <- title "Frequency" $ withDisplay (hSlider (1, 10) 1) -< ()
-    tick2 <- timer -< 1 / f
-    _ <- title "Tick" display -< tick2
+    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 10) 1) -< ()
+    dt <- filterTick -< (tick, i)
+    _ <- title "Tick?" display -< dt
 
     outMsg <- throttle -< (channel, note, tick, isPlaying)
     returnA -< outMsg
+
+
+filterTick = proc (dt, max) -> do
+    rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt + 1)
+    returnA -< cnt
+
 
 
 threeUI :: UISF () ()
