@@ -28,13 +28,16 @@ randomPitchBound = title "Pitch" $ topDown $ proc _ -> do
     returnA -< (min, max)
 
 
-channelPanel = title "Channel" $ topDown $ proc _ -> do
+channelPanel = title "Channel" $ topDown $ proc ticker -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
+
+    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
+    tick <- filterTick -< (ticker, i)
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
     note <- hold 0 <<< randNote -< notes
 
-    returnA -< (note, isPlaying, notes)
+    returnA -< (note, isPlaying, notes, tick)
 
 
 displayMidiMessage = topDown $ proc s -> do
@@ -81,15 +84,12 @@ statusPanel = leftRight $ proc (channel, isPlaying, note, notes) -> do
     returnA -< ()
 
 
-instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, tick) -> do
-    (note, isPlaying, notes) <- channelPanel -< ()
+instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, ticker) -> do
+    (note, isPlaying, notes, tick) <- channelPanel -< ticker
 
     _ <- statusPanel -< (channel, isPlaying, note, notes)
 
-    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
-    dt <- filterTick -< (tick, i)
-
-    outMsg <- throttle -< (channel, note, dt, isPlaying)
+    outMsg <- throttle -< (channel, note, tick, isPlaying)
     returnA -< outMsg
 
 
