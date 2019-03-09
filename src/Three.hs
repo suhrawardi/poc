@@ -43,7 +43,7 @@ displayMidiMessage = topDown $ proc s -> do
     returnA -< s
 
 
-delayPanel = title "Delay" $ leftRight $ proc m -> do
+delayPanel = title "Delay" $ topDown $ proc m -> do
     r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
     d <- title "Decay rate" $ withDisplay (hSlider (0, 0.9) 0.1) -< ()
     f <- title "Echo frequency" $ withDisplay (hSlider (0, 10) 0) -< ()
