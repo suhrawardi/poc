@@ -107,16 +107,16 @@ threeUI = leftRight $ proc _ -> do
 
   (mo, masterTick) <- midiPanel -< ()
 
-  out1 <- instrumentPanel -< (0, masterTick)
+  out1 <- instrumentPanel -< (1, masterTick)
   midiOut -< (mo, out1)
 
-  out2 <- instrumentPanel -< (1, masterTick)
+  out2 <- instrumentPanel -< (2, masterTick)
   midiOut -< (mo, out2)
 
-  out3 <- instrumentPanel -< (2, masterTick)
+  out3 <- instrumentPanel -< (3, masterTick)
   midiOut -< (mo, out3)
 
-  out4 <- instrumentPanel -< (3, masterTick)
+  out4 <- instrumentPanel -< (4, masterTick)
   midiOut -< (mo, out4)
 
 runThree = runMUI (styling "Composer!" (2000, 800)) threeUI
