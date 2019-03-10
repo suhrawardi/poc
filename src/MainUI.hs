@@ -67,6 +67,7 @@ displayMidiMessage = topDown $ proc m -> do
     returnA -< m
 
 
+delayPanel :: UISF (Maybe [MidiMessage]) (Maybe [MidiMessage])
 delayPanel = title "Delay" $ topDown $ proc m -> do
     r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
     d <- title "Decay rate" $ withDisplay (hSlider (0, 0.9) 0.1) -< ()
@@ -76,6 +77,7 @@ delayPanel = title "Delay" $ topDown $ proc m -> do
     returnA -< s
 
 
+midiPanel :: UISF () (Maybe OutputDeviceID, Maybe ())
 midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     (mi, mo) <- getDeviceIDs -< ()
     m <- midiIn -< mi
@@ -100,6 +102,7 @@ statusPanel = leftRight $ proc (channel, isPlaying, note, notes) -> do
     returnA -< ()
 
 
+instrumentPanel :: UISF (Int, Maybe ()) (Maybe [MidiMessage])
 instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, ticker) -> do
     (note, isPlaying, notes, tick) <- channelPanel -< ticker
 
