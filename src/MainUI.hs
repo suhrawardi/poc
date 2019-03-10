@@ -42,12 +42,12 @@ throttle = proc (channel, freq, tick, isPlaying) -> do
     returnA -< messages
 
 
-randomPitchBound = title "Pitch" $ topDown $ proc _ -> do
-    min <- title "Min" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
-    max <- title "Max" $ withDisplay (hiSlider 1 (30, 70) 60) -< ()
-    returnA -< (min, max)
+maybeTick :: UISF (Maybe [MidiMessage]) (Maybe [()])
+maybeTick = proc m ->
+    returnA -< fmap (mapMaybe asTick) m
 
 
+channelPanel :: UISF (Maybe ()) (Int, Bool, [PitchClass], Maybe ())
 channelPanel = title "Channel" $ topDown $ proc ticker -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
@@ -74,10 +74,6 @@ delayPanel = title "Delay" $ topDown $ proc m -> do
     rec s <- vdelay -< (1/f, fmap (mapMaybe (decay d r)) m')
         let m' = mappend m s
     returnA -< s
-
-
-maybeTick = proc m ->
-    returnA -< fmap (mapMaybe asTick) m
 
 
 midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
