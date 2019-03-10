@@ -7,7 +7,6 @@ module MidiPanel (
 import Buttons
 import Data.Maybe (mapMaybe, isJust)
 import Euterpea
-import Helpers
 import HSoM
 import FRP.UISF
 
@@ -26,6 +25,12 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     tick2 <- maybeTick -< m
 
     returnA -< (mo, tick)
+
+
+asTick :: MidiMessage -> Maybe ()
+asTick ANote{}        = Just ()
+asTick (Std NoteOn{}) = Just ()
+asTick _              = Nothing
 
 
 decay :: Time -> MidiMessage -> Maybe MidiMessage

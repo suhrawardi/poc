@@ -2,7 +2,6 @@
 
 module Helpers (
     asMidiMessage,
-    asTick,
     notes,
     sGen,
     styling
@@ -16,12 +15,6 @@ import System.Random
 
 sGen :: StdGen
 sGen = mkStdGen 42
-
-
-asTick :: MidiMessage -> Maybe ()
-asTick ANote{}        = Just ()
-asTick (Std NoteOn{}) = Just ()
-asTick _              = Nothing
 
 
 notes :: [(String, PitchClass)]
