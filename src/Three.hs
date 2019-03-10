@@ -14,6 +14,7 @@ import System.Random
 import System.Random.Distributions
 
 
+randNote :: UISF [PitchClass] (Maybe Int)
 randNote = proc notes -> do
     i <- liftAIO randomRIO -< (0, length notes - 1)
     let note = case notes of
@@ -22,6 +23,7 @@ randNote = proc notes -> do
     returnA -< note
 
 
+filterTick :: UISF (Maybe (), Int) (Maybe ())
 filterTick = proc (dt, max) -> do
     rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt')
         let dt' = if isJust dt && cnt == max then Just () else Nothing
@@ -31,6 +33,7 @@ filterTick = proc (dt, max) -> do
     returnA -< dt
 
 
+throttle :: UISF (Int, Int, Maybe (), Bool) (Maybe [MidiMessage])
 throttle = proc (channel, freq, tick, isPlaying) -> do
     rec messages <- delay Nothing -< messages'
         let messages' = if isJust tick && isPlaying
