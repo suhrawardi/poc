@@ -91,6 +91,7 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     returnA -< (mo, tick)
 
 
+statusPanel :: UISF (Int, Bool, Int, [PitchClass]) ()
 statusPanel = leftRight $ proc (channel, isPlaying, note, notes) -> do
     _ <- title "On?" display -< isPlaying
     _ <- title "Channel" display -< channel

@@ -42,7 +42,7 @@ decay dur r m =
 grow :: Double -> Double -> Double
 grow r x = r * x * (1 - x)
 
-
+notes :: [(String, PitchClass)]
 notes = [("C", C), ("Cs", Cs),
          ("D", D), ("Ds", Ds),
          ("E", E),
