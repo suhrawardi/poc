@@ -60,10 +60,11 @@ channelPanel = title "Channel" $ topDown $ proc ticker -> do
     returnA -< (note, isPlaying, notes, tick)
 
 
-displayMidiMessage = topDown $ proc s -> do
-    m2 <- hold [ANote 0 1 64 0.05] -< s
+displayMidiMessage :: UISF (Maybe [MidiMessage]) (Maybe [MidiMessage])
+displayMidiMessage = topDown $ proc m -> do
+    m2 <- hold [ANote 0 1 64 0.05] -< m
     _ <- title "Midi in" display -< m2
-    returnA -< s
+    returnA -< m
 
 
 delayPanel = title "Delay" $ topDown $ proc m -> do
