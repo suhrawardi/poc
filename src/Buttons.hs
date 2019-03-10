@@ -9,6 +9,7 @@ import Data.Maybe (isJust)
 import FRP.UISF
 
 
+buttonsPanel :: UISF () (SEvent (), SEvent ())
 buttonsPanel = title "Start/Stop" $ leftRight $ proc _ -> do
     start <- edge <<< button "Start" -< ()
     stop <- edge <<< button "Stop" -< ()

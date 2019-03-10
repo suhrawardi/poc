@@ -52,6 +52,11 @@ notes = [("C", C), ("Cs", Cs),
          ("B", B), ("Bs", Bs)]
 
 
+asMidiMessage :: Int -> Int -> [MidiMessage]
+asMidiMessage channel freq = [ANote channel freq 64 0.05]
+
+
+getDeviceIDs :: UISF () (Maybe InputDeviceID, Maybe OutputDeviceID)
 getDeviceIDs = topDown $
   proc () -> do
     mi <- selectInput -< ()
@@ -59,8 +64,5 @@ getDeviceIDs = topDown $
     outA -< (mi, mo)
 
 
-asMidiMessage :: Int -> Int -> [MidiMessage]
-asMidiMessage channel freq = [ANote channel freq 64 0.05]
-
-
+styling :: String -> (Int, Int) -> UIParams
 styling title (h, w) = defaultMUIParams {uiTitle = title, uiSize = (h, w)}
