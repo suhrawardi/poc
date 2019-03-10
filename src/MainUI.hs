@@ -10,6 +10,7 @@ import Euterpea
 import Helpers
 import HSoM
 import FRP.UISF
+import MidiPanel
 import System.Random
 import System.Random.Distributions
 
@@ -42,11 +43,6 @@ throttle = proc (channel, freq, tick, isPlaying) -> do
     returnA -< messages
 
 
-maybeTick :: UISF (Maybe [MidiMessage]) (Maybe [()])
-maybeTick = proc m ->
-    returnA -< fmap (mapMaybe asTick) m
-
-
 channelPanel :: UISF (Maybe ()) (Int, Bool, [PitchClass], Maybe ())
 channelPanel = title "Channel" $ topDown $ proc ticker -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
@@ -58,39 +54,6 @@ channelPanel = title "Channel" $ topDown $ proc ticker -> do
     note <- hold 0 <<< randNote -< notes
 
     returnA -< (note, isPlaying, notes, tick)
-
-
-displayMidiMessage :: UISF (Maybe [MidiMessage]) (Maybe [MidiMessage])
-displayMidiMessage = topDown $ proc m -> do
-    m2 <- hold [ANote 0 1 64 0.05] -< m
-    _ <- title "Midi in" display -< m2
-    returnA -< m
-
-
-delayPanel :: UISF (Maybe [MidiMessage]) (Maybe [MidiMessage])
-delayPanel = title "Delay" $ topDown $ proc m -> do
-    r <- title "Growth rate" $ withDisplay (hSlider (2.4, 4.0) 2.4) -< ()
-    d <- title "Decay rate" $ withDisplay (hSlider (0, 0.9) 0.1) -< ()
-    f <- title "Echo frequency" $ withDisplay (hSlider (0, 10) 0) -< ()
-    rec s <- vdelay -< (1/f, fmap (mapMaybe (decay d r)) m')
-        let m' = mappend m s
-    returnA -< s
-
-
-midiPanel :: UISF () (Maybe OutputDeviceID, Maybe ())
-midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
-    (mi, mo) <- getDeviceIDs -< ()
-    m <- midiIn -< mi
-
-    m2 <- delayPanel -< m
-    _ <- displayMidiMessage -< m2
-
-    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 180) 1) -< ()
-    tick <- timer -< 60 / fromIntegral f
-
-    tick2 <- maybeTick -< m
-
-    returnA -< (mo, tick)
 
 
 statusPanel :: UISF (Int, Bool, Int, [PitchClass]) ()

@@ -3,9 +3,6 @@
 module Helpers (
     asMidiMessage,
     asTick,
-    decay,
-    getDeviceIDs,
-    grow,
     notes,
     sGen,
     styling
@@ -27,21 +24,6 @@ asTick (Std NoteOn{}) = Just ()
 asTick _              = Nothing
 
 
-decay :: Time -> Double -> MidiMessage -> Maybe MidiMessage
-decay dur r m =
-  let f c k v d = if v > 0
-                  then let v' = truncate(fromIntegral v * r)
-                       in Just (ANote c k v' d)
-                  else Nothing
-  in case m of
-    ANote c k v d      -> f c k v d
-    Std (NoteOn c k v) -> f c k v dur
-    _                  -> Nothing
-
-
-grow :: Double -> Double -> Double
-grow r x = r * x * (1 - x)
-
 notes :: [(String, PitchClass)]
 notes = [("C", C), ("Cs", Cs),
          ("D", D), ("Ds", Ds),
@@ -54,14 +36,6 @@ notes = [("C", C), ("Cs", Cs),
 
 asMidiMessage :: Int -> Int -> [MidiMessage]
 asMidiMessage channel freq = [ANote channel freq 64 0.05]
-
-
-getDeviceIDs :: UISF () (Maybe InputDeviceID, Maybe OutputDeviceID)
-getDeviceIDs = topDown $
-  proc () -> do
-    mi <- selectInput -< ()
-    mo <- selectOutput -< ()
-    outA -< (mi, mo)
 
 
 styling :: String -> (Int, Int) -> UIParams
