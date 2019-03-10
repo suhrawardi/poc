@@ -1,7 +1,7 @@
 {-# LANGUAGE Arrows #-}
 
-module Three (
-    runThree
+module MainUI (
+    runMainUI
   ) where
 
 import Buttons
@@ -113,8 +113,8 @@ instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, ticker) -> do
     returnA -< outMsg
 
 
-threeUI :: UISF () ()
-threeUI = leftRight $ proc _ -> do
+mainUI :: UISF () ()
+mainUI = leftRight $ proc _ -> do
 
   (mo, masterTick) <- midiPanel -< ()
 
@@ -130,4 +130,4 @@ threeUI = leftRight $ proc _ -> do
   out4 <- instrumentPanel -< (4, masterTick)
   midiOut -< (mo, out4)
 
-runThree = runMUI (styling "Composer!" (2000, 800)) threeUI
+runMainUI = runMUI (styling "Composer!" (2000, 800)) mainUI
