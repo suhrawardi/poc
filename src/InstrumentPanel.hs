@@ -34,18 +34,19 @@ channelPanel = title "Channel" $ topDown $ proc ticker -> do
     tick <- filterTick -< (ticker, i)
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
-    note <- hold 0 <<< randNote -< notes
+    note <- hold 0 <<< maybeNote -< (tick, notes)
+    --- note <- hold 0 <<< randNote -< notes
 
     returnA -< (note, isPlaying, notes, tick)
 
 
 filterTick :: UISF (Maybe (), Int) (Maybe ())
 filterTick = proc (dt, max) -> do
-    rec (dt, cnt) <- delay (Nothing, 0) -< (dt, cnt')
+    rec (dt, cnt) <- delay (Nothing, 0) -< (dt', cnt')
         let dt' = if isJust dt && cnt == max then Just () else Nothing
             cnt' = if isJust dt
                    then if cnt == max then 0 else cnt + 1
-                   else cnt
+                   else if cnt > 0 then cnt else 0
     returnA -< dt
 
 
@@ -65,6 +66,16 @@ randNote = proc notes -> do
     let note = case notes of
                     [] -> Nothing
                     _ -> Just $ pcToInt $ notes !! i
+    returnA -< note
+
+
+maybeRandNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
+maybeRandNote = proc (_, notes) -> randNote -< notes
+
+
+maybeNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
+maybeNote = proc (tick, notes) -> do
+    note <- maybeRandNote -< (tick, notes)
     returnA -< note
 
 
