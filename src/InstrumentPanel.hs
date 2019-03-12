@@ -30,16 +30,10 @@ channelPanel :: UISF (Maybe ()) (Int, Bool, [PitchClass], Maybe ())
 channelPanel = title "Channel" $ topDown $ proc ticker -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
---    max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
---    rec (ticker, max, cnt) <- delay (Nothing, 1, 0) -< (ticker', max', cnt')
---        let ticker' = ticker
---            max' = max
---            cnt' = cnt + 1
---    _ <- display -< (ticker, max, cnt)
---    tick <- filterTick -< (ticker, max, cnt)
-    tick <- arr id -< ticker
-
-    _ <- display -< tick
+    max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
+    rec (ticker', max', cnt') <- delay (Nothing, 1, 0) -< (ticker, max, cnt)
+        let cnt = cnt' + 1
+    tick <- filterTick -< (ticker', max', cnt')
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
     note <- hold 0 <<< maybeNote -< (tick, notes)

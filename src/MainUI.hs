@@ -11,7 +11,7 @@ import FRP.UISF
 import MidiPanel
 
 
-runMainUI = runMUI (styling "Composer" (2000, 800)) mainUI
+runMainUI = runMUI (styling "Composer" (1600, 800)) mainUI
 
 
 mainUI :: UISF () ()
@@ -27,9 +27,6 @@ mainUI = leftRight $ proc _ -> do
 
   out3 <- instrumentPanel -< (3, masterTick)
   midiOut -< (mo, out3)
-
-  out4 <- instrumentPanel -< (4, masterTick)
-  midiOut -< (mo, out4)
 
 
 styling :: String -> (Int, Int) -> UIParams

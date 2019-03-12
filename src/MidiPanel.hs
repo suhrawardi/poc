@@ -19,8 +19,8 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
 
-    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 180) 1) -< ()
-    tick <- timer -< 60 / fromIntegral f
+    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 24) 1) -< ()
+    tick <- timer -< 6 / fromIntegral f
 
     tick2 <- maybeTick -< m
 
