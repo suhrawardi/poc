@@ -30,24 +30,28 @@ channelPanel :: UISF (Maybe ()) (Int, Bool, [PitchClass], Maybe ())
 channelPanel = title "Channel" $ topDown $ proc ticker -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
-    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
-    tick <- filterTick -< (ticker, i)
+--    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
+--    tick <- filterTick -< (ticker, i)
+
+    tick <- arr id -< ticker
+    _ <- display -< tick
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
     note <- hold 0 <<< maybeNote -< (tick, notes)
-    --- note <- hold 0 <<< randNote -< notes
 
     returnA -< (note, isPlaying, notes, tick)
 
 
 filterTick :: UISF (Maybe (), Int) (Maybe ())
 filterTick = proc (dt, max) -> do
-    rec (dt, cnt) <- delay (Nothing, 0) -< (dt', cnt')
-        let dt' = if isJust dt && cnt == max then Just () else Nothing
-            cnt' = if isJust dt
-                   then if cnt == max then 0 else cnt + 1
-                   else if cnt > 0 then cnt else 0
-    returnA -< dt
+    rec (dt, max, cnt) <- delay (Nothing, 1, 0) -< (dt', max', cnt')
+        let dt' = dt
+            max' = max
+            cnt' = cnt
+    mDt <- if isJust dt && cnt `mod` max == 0
+      then returnA -< Just ()
+      else returnA -< Nothing
+    returnA -< mDt
 
 
 notes :: [(String, PitchClass)]
@@ -75,8 +79,13 @@ maybeRandNote = proc (_, notes) -> randNote -< notes
 
 maybeNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
 maybeNote = proc (tick, notes) -> do
-    note <- maybeRandNote -< (tick, notes)
-    returnA -< note
+    mNote <- if isJust tick
+      then do
+        note <- maybeRandNote -< (tick, notes)
+        returnA -< note
+      else
+        returnA -< Nothing
+    returnA -< mNote
 
 
 sGen :: StdGen
