@@ -30,10 +30,15 @@ channelPanel :: UISF (Maybe ()) (Int, Bool, [PitchClass], Maybe ())
 channelPanel = title "Channel" $ topDown $ proc ticker -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
---    i <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
---    tick <- filterTick -< (ticker, i)
-
+--    max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
+--    rec (ticker, max, cnt) <- delay (Nothing, 1, 0) -< (ticker', max', cnt')
+--        let ticker' = ticker
+--            max' = max
+--            cnt' = cnt + 1
+--    _ <- display -< (ticker, max, cnt)
+--    tick <- filterTick -< (ticker, max, cnt)
     tick <- arr id -< ticker
+
     _ <- display -< tick
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
@@ -42,12 +47,8 @@ channelPanel = title "Channel" $ topDown $ proc ticker -> do
     returnA -< (note, isPlaying, notes, tick)
 
 
-filterTick :: UISF (Maybe (), Int) (Maybe ())
-filterTick = proc (dt, max) -> do
-    rec (dt, max, cnt) <- delay (Nothing, 1, 0) -< (dt', max', cnt')
-        let dt' = dt
-            max' = max
-            cnt' = cnt
+filterTick :: UISF (Maybe (), Int, Int) (Maybe ())
+filterTick = proc (dt, max, cnt) -> do
     mDt <- if isJust dt && cnt `mod` max == 0
       then returnA -< Just ()
       else returnA -< Nothing
