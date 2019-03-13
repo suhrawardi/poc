@@ -16,13 +16,17 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     (mi, mo) <- getDeviceIDs -< ()
     m <- midiIn -< mi
 
-    m2 <- delayPanel -< m
-    _ <- displayMidiMessage -< m2
-
     f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 24) 1) -< ()
     tick <- timer -< 6 / fromIntegral f
 
-    tick2 <- maybeTick -< m
+    r <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
+    r2 <- accum 0.1 -< fmap (const (grow r)) tick
+    tick2 <- timer -< (12 / fromIntegral f) * r2
+
+    tick3 <- maybeTick -< m
+
+    m2 <- delayPanel -< m
+    _ <- displayMidiMessage -< m2
 
     returnA -< (mo, tick)
 
@@ -67,6 +71,10 @@ getDeviceIDs = topDown $
     mi <- selectInput -< ()
     mo <- selectOutput -< ()
     outA -< (mi, mo)
+
+
+grow :: Double -> Double -> Double
+grow r x = r * x * (1 - x)
 
 
 maybeTick :: UISF (Maybe [MidiMessage]) (Maybe [()])
