@@ -17,18 +17,20 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     m <- midiIn -< mi
 
     f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 24) 1) -< ()
-    tick <- timer -< 6 / fromIntegral f
+    tick1 <- timer -< 6 / fromIntegral f
 
     r <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
-    r2 <- accum 0.1 -< fmap (const (grow r)) tick
+    r2 <- accum 0.1 -< fmap (const (grow r)) tick1
     tick2 <- timer -< (12 / fromIntegral f) * r2
 
     tick3 <- maybeTick -< m
 
+    c <- leftRight $ title "Ticker" $ radio (map fst possibleTickers) 0 -< ()
+
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
 
-    returnA -< (mo, tick)
+    returnA -< (mo, tick2)
 
 
 asTick :: MidiMessage -> Maybe ()
@@ -77,6 +79,10 @@ grow :: Double -> Double -> Double
 grow r x = r * x * (1 - x)
 
 
-maybeTick :: UISF (Maybe [MidiMessage]) (Maybe [()])
+maybeTick :: UISF (Maybe [MidiMessage]) (SEvent [()])
 maybeTick = proc m ->
     returnA -< fmap (mapMaybe asTick) m
+
+
+possibleTickers :: [(String, Int)]
+possibleTickers = [("Freq", 1), ("Rand", 2)]
