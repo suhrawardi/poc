@@ -23,20 +23,12 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     r2 <- accum 0.1 -< fmap (const (grow r)) tick1
     tick2 <- timer -< (12 / fromIntegral f) * r2
 
-    tick3 <- maybeTick -< m
-
     c <- leftRight $ title "Ticker" $ radio (map fst possibleTickers) 0 -< ()
 
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
 
     returnA -< (mo, tick2)
-
-
-asTick :: MidiMessage -> Maybe ()
-asTick ANote{}        = Just ()
-asTick (Std NoteOn{}) = Just ()
-asTick _              = Nothing
 
 
 decay :: Time -> MidiMessage -> Maybe MidiMessage
@@ -77,11 +69,6 @@ getDeviceIDs = topDown $
 
 grow :: Double -> Double -> Double
 grow r x = r * x * (1 - x)
-
-
-maybeTick :: UISF (Maybe [MidiMessage]) (SEvent [()])
-maybeTick = proc m ->
-    returnA -< fmap (mapMaybe asTick) m
 
 
 possibleTickers :: [(String, Int)]
