@@ -12,9 +12,9 @@ import FRP.UISF
 import System.Random
 
 
-instrumentPanel :: UISF (Int, Maybe ()) (Maybe [MidiMessage])
-instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, ticker) -> do
-    (note, isPlaying, notes, tick) <- channelPanel -< ticker
+instrumentPanel :: UISF (Int, Int) (Maybe [MidiMessage])
+instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, f) -> do
+    (note, isPlaying, notes, tick) <- channelPanel -< f
 
     _ <- statusPanel -< (channel, isPlaying, note, notes)
 
@@ -26,27 +26,17 @@ asMidiMessage :: Int -> Int -> [MidiMessage]
 asMidiMessage channel freq = [ANote channel freq 64 0.05]
 
 
-channelPanel :: UISF (Maybe ()) (Int, Bool, [PitchClass], Maybe ())
-channelPanel = title "Channel" $ topDown $ proc ticker -> do
+channelPanel :: UISF Int (Int, Bool, [PitchClass], Maybe ())
+channelPanel = title "Channel" $ topDown $ proc f -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
     max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 4) -< ()
-    rec (ticker', max', cnt') <- delay (Nothing, 1, 0) -< (ticker, max, cnt)
-        let cnt = cnt' + 1
-    tick <- filterTick -< (ticker', max', cnt')
+    tick <- timer -< 6 / fromIntegral (f * max)
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
     note <- hold 0 <<< maybeNote -< (tick, notes)
 
     returnA -< (note, isPlaying, notes, tick)
-
-
-filterTick :: UISF (Maybe (), Int, Int) (Maybe ())
-filterTick = proc (dt, max, cnt) -> do
-    mDt <- if isJust dt && cnt `mod` max == 0
-      then returnA -< Just ()
-      else returnA -< Nothing
-    returnA -< mDt
 
 
 notes :: [(String, PitchClass)]

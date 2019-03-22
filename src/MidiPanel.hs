@@ -11,24 +11,21 @@ import HSoM
 import FRP.UISF
 
 
-midiPanel :: UISF () (Maybe OutputDeviceID, Maybe ())
+midiPanel :: UISF () (Maybe OutputDeviceID, Int)
 midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     (mi, mo) <- getDeviceIDs -< ()
     m <- midiIn -< mi
 
-    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 24) 1) -< ()
-    tick1 <- timer -< 6 / fromIntegral f
+    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 64) 1) -< ()
 
-    r <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
-    r2 <- accum 0.1 -< fmap (const (grow r)) tick1
-    tick2 <- timer -< (12 / fromIntegral f) * r2
-
-    c <- leftRight $ title "Ticker" $ radio (map fst possibleTickers) 0 -< ()
+--    r <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
+--    r2 <- accum 0.1 -< fmap (const (grow r)) f
+--    tick2 <- timer -< (12 / fromIntegral f) * r2
 
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
 
-    returnA -< (mo, tick2)
+    returnA -< (mo, f)
 
 
 decay :: Time -> MidiMessage -> Maybe MidiMessage

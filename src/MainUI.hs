@@ -17,15 +17,15 @@ runMainUI = runMUI (styling "Composer" (1600, 800)) mainUI
 mainUI :: UISF () ()
 mainUI = leftRight $ proc _ -> do
 
-  (mo, masterTick) <- midiPanel -< ()
+  (mo, f) <- midiPanel -< ()
 
-  out1 <- instrumentPanel -< (1, masterTick)
+  out1 <- instrumentPanel -< (1, f)
   midiOut -< (mo, out1)
 
-  out2 <- instrumentPanel -< (2, masterTick)
+  out2 <- instrumentPanel -< (2, f)
   midiOut -< (mo, out2)
 
-  out3 <- instrumentPanel -< (3, masterTick)
+  out3 <- instrumentPanel -< (3, f)
   midiOut -< (mo, out3)
 
 
