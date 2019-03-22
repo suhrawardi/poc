@@ -16,7 +16,7 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
     (mi, mo) <- getDeviceIDs -< ()
     m <- midiIn -< mi
 
-    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 64) 1) -< ()
+    f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 1) -< ()
 
 --    r <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
 --    r2 <- accum 0.1 -< fmap (const (grow r)) f
