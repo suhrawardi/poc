@@ -30,13 +30,26 @@ channelPanel :: UISF Int (Int, Bool, [PitchClass], Maybe ())
 channelPanel = title "Channel" $ topDown $ proc f -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
+    rSeed <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
+    t <- timer -< fromIntegral f
+    r <- accum 0.1 -< fmap (const (grow rSeed)) t
+    _ <- display -< normalizeGrowth r
+
     max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 8) 4) -< ()
-    tick <- timer -< 8 / fromIntegral (f * max)
+    tick <- timer -< 8 / fromIntegral (f * max) * normalizeGrowth r
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
     note <- hold 0 <<< maybeNote -< (tick, notes)
 
     returnA -< (note, isPlaying, notes, tick)
+
+
+grow :: Double -> Double -> Double
+grow r x = r * x * (1 - x)
+
+
+normalizeGrowth :: Double -> Double
+normalizeGrowth x = (/100) $ fromIntegral $ round $ (*100) $ (+0.42) x
 
 
 notes :: [(String, PitchClass)]
@@ -47,15 +60,6 @@ notes = [("C", C), ("Cs", Cs),
          ("G", G), ("Gs", Gs),
          ("A", A), ("As", As),
          ("B", B), ("Bs", Bs)]
-
-
-randNote :: UISF [PitchClass] (Maybe Int)
-randNote = proc notes -> do
-    i <- liftAIO randomRIO -< (0, length notes - 1)
-    let note = case notes of
-                    [] -> Nothing
-                    _ -> Just $ pcToInt $ notes !! i
-    returnA -< note
 
 
 maybeRandNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
@@ -71,6 +75,15 @@ maybeNote = proc (tick, notes) -> do
       else
         returnA -< Nothing
     returnA -< mNote
+
+
+randNote :: UISF [PitchClass] (Maybe Int)
+randNote = proc notes -> do
+    i <- liftAIO randomRIO -< (0, length notes - 1)
+    let note = case notes of
+                    [] -> Nothing
+                    _ -> Just $ pcToInt $ notes !! i
+    returnA -< note
 
 
 sGen :: StdGen

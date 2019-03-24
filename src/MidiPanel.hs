@@ -18,10 +18,6 @@ midiPanel = topDown $ setSize (400, 600) $ proc _ -> do
 
     f <- title "Frequency" $ withDisplay (hiSlider 1 (1, 16) 1) -< ()
 
---    r <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
---    r2 <- accum 0.1 -< fmap (const (grow r)) f
---    tick2 <- timer -< (12 / fromIntegral f) * r2
-
     m2 <- delayPanel -< m
     _ <- displayMidiMessage -< m2
 
@@ -62,10 +58,6 @@ getDeviceIDs = topDown $
     mi <- selectInput -< ()
     mo <- selectOutput -< ()
     outA -< (mi, mo)
-
-
-grow :: Double -> Double -> Double
-grow r x = r * x * (1 - x)
 
 
 possibleTickers :: [(String, Int)]
