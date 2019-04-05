@@ -66,11 +66,25 @@ maybeRandNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
 maybeRandNote = proc (_, notes) -> randNote -< notes
 
 
+maybeTick :: UISF (Maybe (), [PitchClass]) (Maybe ())
+maybeTick = proc (tick, notes) -> do
+    rec (a, b, c) <- delay (Nothing, Nothing, Nothing) -< (b, c, tick')
+        let tick' = if isJust tick
+                    then cellAutom (a, b, c)
+                    else Nothing
+    returnA -< tick'
+
+
+cellAutom (a, b, c) = Just ()
+
+
+
 maybeNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
 maybeNote = proc (tick, notes) -> do
     mNote <- if isJust tick
       then do
-        note <- maybeRandNote -< (tick, notes)
+        tick' <- maybeTick -< (tick, notes)
+        note <- maybeRandNote -< (tick', notes)
         returnA -< note
       else
         returnA -< Nothing
