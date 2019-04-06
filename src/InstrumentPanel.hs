@@ -39,7 +39,7 @@ channelPanel = title "Channel" $ topDown $ proc f -> do
     tick <- timer -< 8 / fromIntegral (f * max) * normalizeGrowth r
 
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
-    note <- hold 0 <<< maybeNote -< (tick, notes)
+    note <- hold 0 <<< maybeNote -< (tick, notes, 30)
 
     returnA -< (note, isPlaying, notes, tick)
 
@@ -66,24 +66,32 @@ maybeRandNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
 maybeRandNote = proc (_, notes) -> randNote -< notes
 
 
-maybeTick :: UISF (Maybe (), [PitchClass]) (Maybe ())
-maybeTick = proc (tick, notes) -> do
+maybeTick :: UISF (Maybe (), [PitchClass], Int) (Maybe ())
+maybeTick = proc (tick, notes, rule) -> do
     rec (a, b, c) <- delay (Nothing, Nothing, Nothing) -< (b, c, tick')
-        let tick' = if isJust tick
-                    then cellAutom (a, b, c)
-                    else Nothing
+        let tick' = cellAutom rule (a, b, c)
     returnA -< tick'
 
 
-cellAutom (a, b, c) = Just ()
+cellAutom 30 state = cellAutom30 state
+cellAutom rule state = cellAutom30 state
 
 
+cellAutom30 (Just (), Just (), Just ()) = Nothing
+cellAutom30 (Just (), Just (), Nothing) = Just ()
+cellAutom30 (Just (), Nothing, Just ()) = Just ()
+cellAutom30 (Just (), Nothing, Nothing) = Nothing
+cellAutom30 (Nothing, Just (), Just ()) = Just ()
+cellAutom30 (Nothing, Just (), Nothing) = Just ()
+cellAutom30 (Nothing, Nothing, Just ()) = Just ()
+cellAutom30 (Nothing, Nothing, Nothing) = Nothing
 
-maybeNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
-maybeNote = proc (tick, notes) -> do
+
+maybeNote :: UISF (Maybe (), [PitchClass], Int) (Maybe Int)
+maybeNote = proc (tick, notes, rule) -> do
     mNote <- if isJust tick
       then do
-        tick' <- maybeTick -< (tick, notes)
+        tick' <- maybeTick -< (tick, notes, rule)
         note <- maybeRandNote -< (tick', notes)
         returnA -< note
       else
@@ -95,8 +103,9 @@ randNote :: UISF [PitchClass] (Maybe Int)
 randNote = proc notes -> do
     i <- liftAIO randomRIO -< (0, length notes - 1)
     let note = case notes of
-                    [] -> Nothing
-                    _ -> Just $ pcToInt $ notes !! i
+                    []  -> Nothing
+                    [n] -> Just $ pcToInt n
+                    _   -> Just $ pcToInt $ notes !! i
     returnA -< note
 
 
