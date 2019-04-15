@@ -5,6 +5,7 @@ module InstrumentPanel (
   ) where
 
 import Buttons
+import CellularAutomata
 import Data.Maybe (isJust)
 import Euterpea
 import HSoM
@@ -38,8 +39,9 @@ channelPanel = title "Channel" $ topDown $ proc f -> do
     max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 8) 4) -< ()
     tick <- timer -< 8 / fromIntegral (f * max) * normalizeGrowth r
 
+    i <- leftRight $ title "Rule" $ radio (fmap fst rules) 0 -< ()
     notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
-    note <- hold 0 <<< maybeNote -< (tick, notes, 30)
+    note <- hold 0 <<< maybeNote -< (tick, notes, toRule i)
 
     returnA -< (note, isPlaying, notes, tick)
 
@@ -69,22 +71,8 @@ maybeRandNote = proc (_, notes) -> randNote -< notes
 maybeTick :: UISF (Maybe (), [PitchClass], Int) (Maybe ())
 maybeTick = proc (tick, notes, rule) -> do
     rec (a, b, c) <- delay (Nothing, Nothing, Nothing) -< (b, c, tick')
-        let tick' = cellAutom rule (a, b, c)
+        let tick' = cellularAutomata rule (a, b, c)
     returnA -< tick'
-
-
-cellAutom 30 state = cellAutom30 state
-cellAutom rule state = cellAutom30 state
-
-
-cellAutom30 (Just (), Just (), Just ()) = Nothing
-cellAutom30 (Just (), Just (), Nothing) = Just ()
-cellAutom30 (Just (), Nothing, Just ()) = Just ()
-cellAutom30 (Just (), Nothing, Nothing) = Nothing
-cellAutom30 (Nothing, Just (), Just ()) = Just ()
-cellAutom30 (Nothing, Just (), Nothing) = Just ()
-cellAutom30 (Nothing, Nothing, Just ()) = Just ()
-cellAutom30 (Nothing, Nothing, Nothing) = Nothing
 
 
 maybeNote :: UISF (Maybe (), [PitchClass], Int) (Maybe Int)
