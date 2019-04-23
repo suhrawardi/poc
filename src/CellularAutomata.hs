@@ -8,112 +8,76 @@ module CellularAutomata (
 
 
 rules :: [(String, Int)]
-rules = [("255", 255), ("30", 30), ("54", 54), ("64", 64), ("73", 73),
-         ("105", 105), ("109", 109), ("110", 110), ("126", 126), ("150", 150)]
+rules = [("255", 255), ("30", 30), ("45", 45), ("73", 73), ("75", 75),
+         ("86", 86), ("89", 89), ("97", 97), ("101", 101), ("105", 105),
+         ("109", 109), ("110", 110), ("124", 124), ("126", 126), ("135", 135),
+         ("137", 137), ("149", 149), ("150", 150), ("153", 153), ("169", 169)]
+
+
+rulesMatrix = [[0, 0, 0, 1, 1, 1, 1, 0], -- 30
+               [0, 0, 1, 0, 1, 1, 0, 1], -- 45
+               [0, 1, 0, 0, 1, 0, 0, 1], -- 73
+               [0, 1, 0, 0, 1, 0, 1, 1], -- 75
+               [0, 1, 0, 1, 0, 1, 1, 0], -- 86
+               [0, 1, 0, 1, 1, 0, 0, 1], -- 89
+               [0, 1, 1, 0, 0, 0, 0, 1], -- 97
+               [0, 1, 1, 0, 0, 1, 0, 1], -- 101
+               [0, 1, 1, 0, 1, 0, 0, 1], -- 105
+               [0, 1, 1, 0, 1, 1, 0, 1], -- 109
+               [0, 1, 1, 0, 1, 1, 1, 0], -- 110
+               [1, 1, 1, 1, 1, 1, 0, 0], -- 124
+               [0, 1, 1, 1, 1, 1, 1, 0], -- 126
+               [1, 0, 0, 0, 0, 1, 1, 1], -- 135
+               [1, 0, 0, 0, 1, 0, 0, 1], -- 137
+               [1, 0, 0, 1, 0, 1, 0, 1], -- 149
+               [1, 0, 0, 1, 0, 1, 1, 0], -- 150
+               [1, 0, 0, 1, 1, 0, 0, 1], -- 153
+               [1, 0, 1, 0, 1, 0, 0, 1], -- 169
+               [1, 1, 1, 1, 1, 1, 1, 1]] -- 255
+
+
+asIndex :: Int -> (Maybe (), Maybe (), Maybe ()) -> Maybe ()
+asIndex rule (Just (), Just (), Just ()) = fromInt $ head (rulesMatrix !! rule)
+asIndex rule (Just (), Just (), Nothing) = fromInt $ rulesMatrix !! rule !! 1
+asIndex rule (Just (), Nothing, Just ()) = fromInt $ rulesMatrix !! rule !! 2
+asIndex rule (Just (), Nothing, Nothing) = fromInt $ rulesMatrix !! rule !! 3
+asIndex rule (Nothing, Just (), Just ()) = fromInt $ rulesMatrix !! rule !! 4
+asIndex rule (Nothing, Just (), Nothing) = fromInt $ rulesMatrix !! rule !! 5
+asIndex rule (Nothing, Nothing, Just ()) = fromInt $ rulesMatrix !! rule !! 6
+asIndex rule (Nothing, Nothing, Nothing) = fromInt $ rulesMatrix !! rule !! 7
+
+
+cellularAutomata :: Int -> (Maybe (), Maybe (), Maybe ()) -> Maybe ()
+cellularAutomata rule = asIndex (asKey rule)
+
+
+fromInt :: Int -> Maybe ()
+fromInt 1 = Just ()
+fromInt 0 = Nothing
+
+
+asKey :: Int -> Int
+asKey 30  = 0
+asKey 45  = 1
+asKey 73  = 2
+asKey 75  = 3
+asKey 86  = 4
+asKey 89  = 5
+asKey 97  = 6
+asKey 101 = 7
+asKey 105 = 8
+asKey 109 = 9
+asKey 110 = 10
+asKey 124 = 11
+asKey 126 = 12
+asKey 135 = 13
+asKey 137 = 14
+asKey 149 = 15
+asKey 150 = 16
+asKey 153 = 17
+asKey 169 = 18
+asKey 255 = 19
 
 
 toRule :: Int -> Int
 toRule i = snd $ rules !! i
-
-
-cellularAutomata :: Int -> (Maybe (), Maybe (), Maybe ()) -> Maybe ()
-cellularAutomata 30 state = cellAutom30 state
-cellularAutomata 54 state = cellAutom54 state
-cellularAutomata 64 state = cellAutom64 state
-cellularAutomata 73 state = cellAutom73 state
-cellularAutomata 105 state = cellAutom105 state
-cellularAutomata 109 state = cellAutom109 state
-cellularAutomata 110 state = cellAutom110 state
-cellularAutomata 126 state = cellAutom126 state
-cellularAutomata 150 state = cellAutom150 state
-cellularAutomata _ state = Just ()
-
-
-cellAutom30 (Just (), Just (), Just ()) = Nothing
-cellAutom30 (Just (), Just (), Nothing) = Just ()
-cellAutom30 (Just (), Nothing, Just ()) = Just ()
-cellAutom30 (Just (), Nothing, Nothing) = Nothing
-cellAutom30 (Nothing, Just (), Just ()) = Just ()
-cellAutom30 (Nothing, Just (), Nothing) = Just ()
-cellAutom30 (Nothing, Nothing, Just ()) = Just ()
-cellAutom30 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom54 (Just (), Just (), Just ()) = Nothing
-cellAutom54 (Just (), Just (), Nothing) = Nothing
-cellAutom54 (Just (), Nothing, Just ()) = Just ()
-cellAutom54 (Just (), Nothing, Nothing) = Just ()
-cellAutom54 (Nothing, Just (), Just ()) = Just ()
-cellAutom54 (Nothing, Just (), Nothing) = Nothing
-cellAutom54 (Nothing, Nothing, Just ()) = Nothing
-cellAutom54 (Nothing, Nothing, Nothing) = Just ()
-
-
-cellAutom64 (Just (), Just (), Just ()) = Nothing
-cellAutom64 (Just (), Just (), Nothing) = Just ()
-cellAutom64 (Just (), Nothing, Just ()) = Just ()
-cellAutom64 (Just (), Nothing, Nothing) = Nothing
-cellAutom64 (Nothing, Just (), Just ()) = Just ()
-cellAutom64 (Nothing, Just (), Nothing) = Just ()
-cellAutom64 (Nothing, Nothing, Just ()) = Just ()
-cellAutom64 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom73 (Just (), Just (), Just ()) = Nothing
-cellAutom73 (Just (), Just (), Nothing) = Just ()
-cellAutom73 (Just (), Nothing, Just ()) = Just ()
-cellAutom73 (Just (), Nothing, Nothing) = Nothing
-cellAutom73 (Nothing, Just (), Just ()) = Just ()
-cellAutom73 (Nothing, Just (), Nothing) = Just ()
-cellAutom73 (Nothing, Nothing, Just ()) = Just ()
-cellAutom73 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom105 (Just (), Just (), Just ()) = Nothing
-cellAutom105 (Just (), Just (), Nothing) = Just ()
-cellAutom105 (Just (), Nothing, Just ()) = Just ()
-cellAutom105 (Just (), Nothing, Nothing) = Nothing
-cellAutom105 (Nothing, Just (), Just ()) = Just ()
-cellAutom105 (Nothing, Just (), Nothing) = Just ()
-cellAutom105 (Nothing, Nothing, Just ()) = Just ()
-cellAutom105 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom109 (Just (), Just (), Just ()) = Nothing
-cellAutom109 (Just (), Just (), Nothing) = Just ()
-cellAutom109 (Just (), Nothing, Just ()) = Just ()
-cellAutom109 (Just (), Nothing, Nothing) = Nothing
-cellAutom109 (Nothing, Just (), Just ()) = Just ()
-cellAutom109 (Nothing, Just (), Nothing) = Just ()
-cellAutom109 (Nothing, Nothing, Just ()) = Just ()
-cellAutom109 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom110 (Just (), Just (), Just ()) = Nothing
-cellAutom110 (Just (), Just (), Nothing) = Just ()
-cellAutom110 (Just (), Nothing, Just ()) = Just ()
-cellAutom110 (Just (), Nothing, Nothing) = Nothing
-cellAutom110 (Nothing, Just (), Just ()) = Just ()
-cellAutom110 (Nothing, Just (), Nothing) = Just ()
-cellAutom110 (Nothing, Nothing, Just ()) = Just ()
-cellAutom110 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom126 (Just (), Just (), Just ()) = Nothing
-cellAutom126 (Just (), Just (), Nothing) = Just ()
-cellAutom126 (Just (), Nothing, Just ()) = Just ()
-cellAutom126 (Just (), Nothing, Nothing) = Nothing
-cellAutom126 (Nothing, Just (), Just ()) = Just ()
-cellAutom126 (Nothing, Just (), Nothing) = Just ()
-cellAutom126 (Nothing, Nothing, Just ()) = Just ()
-cellAutom126 (Nothing, Nothing, Nothing) = Nothing
-
-
-cellAutom150 (Just (), Just (), Just ()) = Nothing
-cellAutom150 (Just (), Just (), Nothing) = Just ()
-cellAutom150 (Just (), Nothing, Just ()) = Just ()
-cellAutom150 (Just (), Nothing, Nothing) = Nothing
-cellAutom150 (Nothing, Just (), Just ()) = Just ()
-cellAutom150 (Nothing, Just (), Nothing) = Just ()
-cellAutom150 (Nothing, Nothing, Just ()) = Just ()
-cellAutom150 (Nothing, Nothing, Nothing) = Nothing
