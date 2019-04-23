@@ -14,7 +14,7 @@ import System.Random
 
 
 instrumentPanel :: UISF (Int, Int) (Maybe [MidiMessage])
-instrumentPanel = topDown $ setSize (400, 800) $ proc (channel, f) -> do
+instrumentPanel = topDown $ setSize (500, 800) $ proc (channel, f) -> do
     (note, isPlaying, notes, tick) <- channelPanel -< f
 
     _ <- statusPanel -< (channel, isPlaying, note, notes)
@@ -27,8 +27,8 @@ asMidiMessage :: Int -> Int -> [MidiMessage]
 asMidiMessage channel freq = [ANote channel freq 64 0.05]
 
 
-channelPanel :: UISF Int (Int, Bool, [PitchClass], Maybe ())
-channelPanel = title "Channel" $ topDown $ proc f -> do
+freqPanel :: UISF Int (Bool, Maybe (), Double)
+freqPanel = setSize (350, 460) $ topDown $ proc f -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
     rSeed <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
@@ -36,11 +36,19 @@ channelPanel = title "Channel" $ topDown $ proc f -> do
     r <- accum 0.1 -< fmap (const (grow rSeed)) t
     _ <- display -< normalizeGrowth r
 
-    max <- title "Frequency" $ withDisplay (hiSlider 1 (1, 8) 4) -< ()
+    max <- title "Frequency" $ hiSlider 1 (1, 8) 4 -< ()
+    _ <- display -< max
     tick <- timer -< 8 / fromIntegral (f * max) * normalizeGrowth r
 
-    i <- leftRight $ title "Rule" $ radio (fmap fst rules) 0 -< ()
-    notes <- leftRight $ title "Note Selection" $ checkGroup notes -< ()
+    returnA -< (isPlaying, tick, r)
+
+
+channelPanel :: UISF Int (Int, Bool, [PitchClass], Maybe ())
+channelPanel = title "Channel" $ leftRight $ proc f -> do
+    (isPlaying, tick, r) <- freqPanel -< f
+
+    notes <- topDown $ setSize (75, 460) $ title "Notes" $ checkGroup notes -< ()
+    i <- topDown $ setSize (75, 460) $ title "Rule" $ radio (fmap fst rules) 0 -< ()
     note <- hold 0 <<< maybeNote -< (tick, notes, toRule i)
 
     returnA -< (note, isPlaying, notes, tick)
