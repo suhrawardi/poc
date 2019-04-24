@@ -32,7 +32,7 @@ freqPanel = setSize (350, 460) $ topDown $ proc f -> do
     isPlaying <- buttonsPanel >>> handleButtons -< ()
 
     rSeed <- title "Rand" $ hSlider (2.4, 4.0) 2.4 -< ()
-    t <- timer -< fromIntegral f
+    t <- timer -< 1 / fromIntegral f
     r <- accum 0.1 -< fmap (const (grow rSeed)) t
     _ <- display -< normalizeGrowth r
 
@@ -49,9 +49,10 @@ channelPanel = title "Channel" $ leftRight $ proc f -> do
 
     notes <- topDown $ setSize (75, 460) $ title "Notes" $ checkGroup notes -< ()
     i <- topDown $ setSize (75, 460) $ title "Rule" $ radio (fmap fst rules) 0 -< ()
-    note <- hold 0 <<< maybeNote -< (tick, notes, toRule i)
+    note <- hold 0 <<< maybeNote -< notes
+    tick' <- maybeTick -< (tick, toRule i)
 
-    returnA -< (note, isPlaying, notes, tick)
+    returnA -< (note, isPlaying, notes, tick')
 
 
 grow :: Double -> Double -> Double
@@ -72,27 +73,15 @@ notes = [("C", C), ("Cs", Cs),
          ("B", B), ("Bs", Bs)]
 
 
-maybeRandNote :: UISF (Maybe (), [PitchClass]) (Maybe Int)
-maybeRandNote = proc (_, notes) -> randNote -< notes
+maybeNote :: UISF [PitchClass] (Maybe Int)
+maybeNote = proc notes -> randNote -< notes
 
 
-maybeTick :: UISF (Maybe (), [PitchClass], Int) (Maybe ())
-maybeTick = proc (tick, notes, rule) -> do
+maybeTick :: UISF (Maybe (), Int) (Maybe ())
+maybeTick = proc (tick, rule) -> do
     rec (a, b, c) <- delay (Nothing, Nothing, Nothing) -< (b, c, tick')
         let tick' = cellularAutomata rule (a, b, c)
     returnA -< tick'
-
-
-maybeNote :: UISF (Maybe (), [PitchClass], Int) (Maybe Int)
-maybeNote = proc (tick, notes, rule) -> do
-    mNote <- if isJust tick
-      then do
-        tick' <- maybeTick -< (tick, notes, rule)
-        note <- maybeRandNote -< (tick', notes)
-        returnA -< note
-      else
-        returnA -< Nothing
-    returnA -< mNote
 
 
 randNote :: UISF [PitchClass] (Maybe Int)
@@ -100,7 +89,6 @@ randNote = proc notes -> do
     i <- liftAIO randomRIO -< (0, length notes - 1)
     let note = case notes of
                     []  -> Nothing
-                    [n] -> Just $ pcToInt n
                     _   -> Just $ pcToInt $ notes !! i
     returnA -< note
 
